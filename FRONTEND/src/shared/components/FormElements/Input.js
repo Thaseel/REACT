@@ -25,7 +25,7 @@ const inputReducer = (state, action) => {
 
 const Input = props => {
     {/* useReducer can be used instead of useState when you have more complex state or interconnected state basically advanced version of useState */}
-    const [inputState, dispatch] = useReducer(inputReducer, {value : props.value || '', isValid: props.valid || false, isTouched : false});
+    const [inputState, dispatch] = useReducer(inputReducer, {value : props.initialValue || '', isValid: props.initialValid || false, isTouched : false});
 
     const { id, onInput } = props;
     const { value, isValid } = inputState;
