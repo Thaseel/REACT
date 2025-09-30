@@ -5,6 +5,8 @@ const placesRoutes = require('./routes/places-routes');
 
 const app = express();
 
+app.use(bodyParser.json())
+
 app.use('/api/places' , placesRoutes) // --> /api/places/...
 
 app.use((error, req, res, next) => {        // --> Error handler prvided by express.js which is identified with 4 paramters and with no path provided
