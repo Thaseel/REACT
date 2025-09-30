@@ -32,17 +32,33 @@ const DUMMY_PLACES = [
 
 router.get('/:pid', (req, res, next) => {
     const placeId = req.params.pid          // {pid: p1}
+
     const place = DUMMY_PLACES.find(p => {
         return p.id === placeId
     })
+
+    if(!place){
+        const error = new Error('Could not find a place for the provided Id.');
+        error.code = 404;
+        throw error;            // throw is used when we have only synchronous operations but if we have asynchronous operations we use 'next'
+    }
+
     res.json({ place });                  // {place} --> {place : place}
 });
 
 router.get('/user/:uid', (req, res, next) => {
     const userId = req.params.uid         
+
     const place = DUMMY_PLACES.find(p => {
         return p.creator === userId
     })
+
+    if(!place){
+        const error = new Error('Could not find a place for the provided user Id.');
+        error.code = 404;
+        return next(error);
+    }
+
     res.json({ place });                  // {place} --> {place : place}
 });
 
