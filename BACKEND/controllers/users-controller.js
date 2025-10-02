@@ -57,15 +57,23 @@ const signup = async (req, res, next) => {
     res.status(201).json({ user: createdUser.toObject({getters : true}) })
 };
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
     const { email, password } = req.body;
 
-    const identifiedUser = DUMMY_USERS.find(u => u.email === email);
-    if (!identifiedUser || identifiedUser.password !== password) {
-        return next( new HttpError('Could not identify User, credentials seems to be invalid.', 401));
+    let existingUser;
+    try{
+        existingUser = await User.findOne({email : email});
+    } catch(err){
+        const error = new HttpError('Logging In failed, please try again later',500)
+        return next(error);
     }
 
-    res.json({ message: 'Loggen In.' })
+    if(!existingUser || existingUser.password !== password){
+        const error = new HttpError('Invalid Credentials, could not log you In.', 401);
+        return next(error);
+    }
+
+    res.json({ message: 'Logged In.' })
 };
 
 exports.getUsers = getUsers;
