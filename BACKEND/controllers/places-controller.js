@@ -152,7 +152,7 @@ const deletePlace = async (req, res, next) => {
 
   let places;
   try {
-    places = await Place.findByIdAndDelete(placeId);
+    places = await Place.findById(placeId).populate('creator');
     // console.log(places)
   } catch (err) {
     const error = new HttpError(
@@ -162,16 +162,26 @@ const deletePlace = async (req, res, next) => {
     return next(error);
   }
 
+  if(!places){
+    const error = new HttpError('Could not find place for this Id.', 404);
+    return next(error)
+  }
+
   // In recent versions .remove() is depricated hence to delete a record we can either use findByIdAndDelete or deleteOne() method
-  // try {
-  //   await places.findByIdAndDelete(placeId);
-  // } catch (err) {
-  //   const error = new HttpError(
-  //     'Something went wrong, could not delete place. please try again later',
-  //     500
-  //   );
-  //   return next(err);
-  // }
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await places.deleteOne({session : sess});
+    places.creator.places.pull(places)
+    await places.creator.save({session : sess});
+    await sess.commitTransaction();
+  } catch (err) {
+    const error = new HttpError(
+      'Something went wrong, could not delete place. please try again later',
+      500
+    );
+    return next(err);
+  }
 
   res.status(200).json({ message: 'Deleted place.' });
 };
