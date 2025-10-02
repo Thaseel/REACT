@@ -8,7 +8,7 @@ const userSchema = new Schema({
     email : {type : String, required : true, unique : true},                // this unique only helps us to query fast and find the data easily does not check if the email is unique for that we need to install a package npm install --save mongoose-unique-validator
     password : {type : String, required : true, minlength : 6},
     image : {type : String, required : true},
-    places : {type : String, required : true}
+    places : [{ type : mongoose.Types.ObjectId, required : true , ref : 'Place'}]
 });
 
 userSchema.plugin(uniqueValidator);
