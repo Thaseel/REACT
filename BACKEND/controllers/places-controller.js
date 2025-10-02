@@ -1,4 +1,4 @@
-const {v4 : uuidv4} = require('uuid');
+const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 
 const HttpError = require('../models/http-error');
@@ -23,7 +23,7 @@ const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid; // { pid: 'p1' }
 
   let place
-  try{
+  try {
     place = await Place.findById(placeId)
   } catch (err) {
     const error = new HttpError('Something went wrong, could not get place.', 500);
@@ -35,7 +35,7 @@ const getPlaceById = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({ place: place.toObject( {getters: true} ) }); // => { place } => { place: place } // the getters will add another property in the object which is id bcuz normally mongoose creates _id which could be cumbersome so we use getters here to get id
+  res.json({ place: place.toObject({ getters: true }) }); // => { place } => { place: place } // the getters will add another property in the object which is id bcuz normally mongoose creates _id which could be cumbersome so we use getters here to get id
 };
 
 // function getPlaceById() { ... }
@@ -45,9 +45,9 @@ const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
 
   let places;
-  try{
-    places = await Place.find({creator : userId});
-  } catch (err){
+  try {
+    places = await Place.find({ creator: userId });
+  } catch (err) {
     const error = new HttpError('Could not find a place for the provided user id.', 404);
     return next(error);
   }
@@ -58,7 +58,7 @@ const getPlacesByUserId = async (req, res, next) => {
     );
   }
 
-  res.json({ places : places.map(place => place.toObject( {getters : true} ))});
+  res.json({ places: places.map(place => place.toObject({ getters: true })) });
 };
 
 const createPlace = async (req, res, next) => {
@@ -81,11 +81,11 @@ const createPlace = async (req, res, next) => {
     title,
     description,
     address,
-    image : 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/400px-Empire_State_Building_%28aerial_view%29.jpg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/400px-Empire_State_Building_%28aerial_view%29.jpg',
     creator
   });
 
-  try{
+  try {
     await createdPlace.save();
   } catch (err) {
     const error = new HttpError('Creating Place failed, please try again.', 500);
@@ -105,31 +105,51 @@ const updatePlace = async (req, res, next) => {
   const placeId = req.params.pid;
 
   let places;
-  try{
+  try {
     places = await Place.findById(placeId);
-  } catch (err){
+  } catch (err) {
     const error = new HttpError('Something went wrong could not update place', 500);
     return next(error);
   }
   places.title = title;
   places.description = description;
 
-  try{
+  try {
     await places.save();
   } catch (err) {
     const error = new HttpError('Something went wrong while updating the place', 500);
     return next(error);
   }
 
-  res.status(200).json({ place: places.toObject({getters : true}) });     // we use toObject method only when we don't have array if we have array then use map first and then toObject method
+  res.status(200).json({ place: places.toObject({ getters: true }) });     // we use toObject method only when we don't have array if we have array then use map first and then toObject method
 };
 
-const deletePlace = (req, res, next) => {
+const deletePlace = async (req, res, next) => {
   const placeId = req.params.pid;
-  if (!DUMMY_PLACES.find(p => p.id === placeId)) {
-    throw new HttpError('Could not find a place for that id.', 404);
+
+  let places;
+  try {
+    places = await Place.findByIdAndDelete(placeId);
+    // console.log(places)
+  } catch (err) {
+    const error = new HttpError(
+      'Something went wrong, could not delete place.',
+      500
+    );
+    return next(error);
   }
-  DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
+
+  // In recent versions .remove() is depricated hence to delete a record we can either use findByIdAndDelete or deleteOne() method
+  // try {
+  //   await places.findByIdAndDelete(placeId);
+  // } catch (err) {
+  //   const error = new HttpError(
+  //     'Something went wrong, could not delete place. please try again later',
+  //     500
+  //   );
+  //   return next(err);
+  // }
+
   res.status(200).json({ message: 'Deleted place.' });
 };
 
